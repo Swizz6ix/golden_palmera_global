@@ -134,6 +134,17 @@ jobs:
                 fi 
                 echo "Container runs as non-root user: $USER_VAL" 
                 
+
+            - name: Trivy Vulnerability Scan
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }}
+                format: table
+                severity: HIGH,CRITICAL
+                ignore-unfixed: true
+                exit-code: "1"
+
+                
             - name: Scan Docker Image 
               uses: aquasecurity/trivy-action@v0.36.0 
               with: 
@@ -142,7 +153,7 @@ jobs:
                 output: trivy-vulnerability.sarif 
                 severity: HIGH,CRITICAL 
                 ignore-unfixed: true 
-                exit-code: "1" 
+                exit-code: "0" 
                 
             - name: Scan Repository Configuration 
               uses: aquasecurity/trivy-action@v0.36.0 
