@@ -45,8 +45,8 @@ BRANCH=$(escape_html "${INPUT_BRANCH}")
 ACTOR=$(escape_html "${INPUT_ACTOR}") 
 MESSAGE=$(escape_html "${INPUT_MESSAGE}") 
 
-TEXT=$(cat <<EOF $
-{ICON} <b>${TITLE}</b> 
+TEXT=$(cat <<EOF
+${ICON} <b>${TITLE}</b> 
 
 <b>Environment:</b> ${ENVIRONMENT} 
 <b>Status:</b> ${STATUS} 
