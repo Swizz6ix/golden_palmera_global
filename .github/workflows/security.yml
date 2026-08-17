@@ -1,0 +1,111 @@
+name: Security 
+
+on: 
+    pull_request: 
+
+    push: 
+        branches: 
+            - main 
+            - staging 
+            - develop 
+            
+    schedule: 
+        - cron: "0 2 * * 1" 
+    
+permissions: 
+    contents: read 
+    security-events: write 
+    
+jobs: 
+    dependency-audit: 
+        name: Dependency Security 
+        runs-on: ubuntu-latest 
+        
+        steps: 
+            - name: Checkout Repository 
+              uses: actions/checkout@v4 
+
+            - name: Setup Node.js 
+              uses: actions/setup-node@v4 
+              with: 
+                node-version: 22 
+                cache: npm 
+                
+            - name: Install Dependencies 
+              run: npm ci 
+              
+            - name: NPM Audit 
+              run: npm audit --audit-level=high 
+              
+            - name: Check Outdated Dependencies 
+              run: npm outdated || true 
+              
+            - name: Generate Dependency SBOM 
+              run: | 
+                npm sbom --sbom-format=cyclonedx > sbom.json 
+                
+            - name: Upload SBOM 
+              uses: actions/upload-artifact@v4 
+              with: 
+                name: npm-security-reports 
+                path: sbom.json 
+                
+                
+    gitleaks: 
+        name: Secret Scanning 
+        runs-on: ubuntu-latest 
+        
+        steps: 
+            - name: Checkout Repository 
+              uses: actions/checkout@v4 
+              with: 
+                fetch-depth: 0 
+                
+            - name: Gitleaks 
+              uses: gitleaks/gitleaks-action@v2 
+              env: 
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+                
+                
+    codeql: 
+        name: CodeQL Analysis 
+        runs-on: ubuntu-latest 
+
+        permissions: 
+            contents: read 
+            security-events: write 
+                
+        steps: 
+            - name: Checkout Repository 
+              uses: actions/checkout@v4 
+                      
+            - name: Initialize CodeQL 
+              uses: github/codeql-action/init@v3 
+              with: 
+                languages: javascript-typescript 
+                build-mode: none 
+                        
+            - name: Perform CodeQL Analysis 
+              uses: github/codeql-action/analyze@v3 
+                      
+                      
+    notify: 
+        needs: 
+            - dependency-audit 
+            - gitleaks 
+            - codeql 
+            
+        if: always() 
+        uses: ./.github/workflows/notifications.yml
+
+        with: 
+            status: | 
+                dependency-audit:${{ needs.dependency-audit.result }} 
+                gitleaks:${{ needs.gitleaks.result }} 
+                codeql:${{ needs.codeql.result }} 
+                
+            environment: ${{ github.head_ref || github.ref_name }} 
+            title: Security Scan 
+            message: Next.js security workflow completed. 
+
+        secrets: inherit

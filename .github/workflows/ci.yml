@@ -1,0 +1,75 @@
+name: Continuous Integration 
+on: 
+    pull_request: 
+        branches: 
+            - main 
+            - staging 
+            - develop 
+
+    push: 
+        branches: 
+            - main 
+            - staging 
+            - develop 
+
+permissions: 
+    contents: read 
+    
+concurrency: 
+    group: ci-${{ github.workflow }}-${{ github.ref }} 
+    cancel-in-progress: true 
+
+jobs: 
+    build: 
+        name: Lint, Type Check, Test and Build 
+        
+        runs-on: 
+            ubuntu-latest 
+        
+        steps: 
+            - name: Checkout Repository 
+              uses: actions/checkout@v4 
+            
+            - name: Setup Node.js 
+              uses: actions/setup-node@v4 
+              with: 
+                node-version: 22 
+                cache: npm 
+
+            - name: Install Dependencies 
+              run: npm ci 
+            
+            - name: Lint 
+              run: npm run lint 
+            
+            - name: Type Check 
+              run: npm run type-check 
+            
+            - name: Unit Tests 
+              run: npm test -- --ci 
+              if: hashFiles('jest.config.*', 'jest.config.*.js', 'jest.config.*.ts') != '' 
+            
+            - name: Build Next.js Application 
+              run: npm run build 
+            
+            - name: Upload Next.js Build 
+              if: always() 
+              uses: actions/upload-artifact@v4 
+              with: 
+                name: next-build 
+                path: | 
+                    .next 
+                    public 
+                retention-days: 1 
+            
+    notify: 
+        needs: build 
+        if: always() 
+
+        uses: ./.github/workflows/notifications.yml 
+        with: 
+            status: ${{ needs.build.result }} 
+            environment: ${{ github.head_ref || github.ref_name }} 
+            title: CI Pipeline 
+            message: Continuous Integration pipeline completed. 
+        secrets: inherit

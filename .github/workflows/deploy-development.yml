@@ -1,0 +1,37 @@
+name: Deploy to Development 
+
+on: 
+    push: 
+        branches: 
+            - develop 
+            
+permissions: 
+    contents: read 
+    packages: read 
+    
+jobs: 
+    deploy: 
+        uses: ./.github/workflows/deploy.yml 
+        with: 
+            environment: development 
+            image_tag: sha-${{ github.sha }} 
+            
+        secrets: 
+            HOST: ${{ secrets.DEV_HOST }} 
+            USER: ${{ secrets.DEV_USER }} 
+            SSH_KEY: ${{ secrets.DEV_SSH_KEY }} 
+            GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }} 
+            GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} 
+            
+            
+    notify: 
+        needs: deploy 
+        if: always() 
+        uses: ./.github/workflows/notifications.yml 
+        with: 
+            status: ${{ needs.deploy.result }} 
+            environment: Development 
+            title: Development Deployment 
+            message: Development deployment completed. 
+            
+        secrets: inherit

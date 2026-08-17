@@ -1,0 +1,62 @@
+name: Deploy Production 
+
+on: 
+    workflow_dispatch: 
+        inputs: 
+            image_tag: 
+                description: Docker image SHA/tag to deploy 
+                required: true 
+                type: string 
+                
+permissions: 
+    contents: read 
+    packages: read 
+    
+    
+jobs: 
+    deploy: 
+        uses: ./.github/workflows/deploy.yml 
+        with: 
+            environment: production 
+            image_tag: ${{ inputs.image_tag }} 
+            
+        secrets: 
+            HOST: ${{ secrets.PRODUCTION_HOST }} 
+            USER: ${{ secrets.PRODUCTION_USER }} 
+            SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }} 
+            GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }} 
+            GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }} 
+
+            
+    rollback: 
+        name: Rollback Deployment 
+        if: failure() 
+        needs: deploy 
+        runs-on: ubuntu-latest 
+        
+        steps: 
+            - name: Rollback Application 
+              uses: appleboy/ssh-action@v1.2.0 
+              with: 
+                host: ${{ secrets.PRODUCTION_HOST }} 
+                username: ${{ secrets.PRODUCTION_USER }} 
+                key: ${{ secrets.PRODUCTION_SSH_KEY }} 
+                
+                script: | 
+                    cd ~/app/docker 
+                    ./rollback.sh 
+                    
+                    
+    notify: 
+        needs: 
+            - deploy 
+            
+        if: always() 
+        uses: ./.github/workflows/notifications.yml 
+        with: 
+            status: ${{ needs.deploy.result }} 
+            environment: Production 
+            title: Production Deployment 
+            message: Production deployment completed. 
+            
+        secrets: inherit

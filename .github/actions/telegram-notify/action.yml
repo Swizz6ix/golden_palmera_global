@@ -1,0 +1,73 @@
+name: Telegram Notification 
+
+description: Send GitHub Actions workflow notifications to Telegram 
+
+inputs: 
+  status: 
+    description: Workflow status 
+    required: true 
+    
+  environment: 
+    description: Deployment environment 
+    required: true 
+    
+  title: 
+    description: Notification title 
+    required: true 
+    
+  message: 
+    description: Notification message 
+    required: true 
+    
+  repository: 
+    description: GitHub repository 
+    required: true 
+    
+  workflow: 
+    description: GitHub workflow name 
+    required: true 
+    
+  actor: 
+    description: GitHub actor 
+    required: true 
+    
+  branch: 
+    description: Git branch 
+    required: true 
+    
+  sha: 
+    description: Git commit SHA 
+    required: true 
+    
+  run-number: 
+    description: GitHub Actions run number 
+    required: true 
+    
+  run-id: 
+    description: GitHub Actions run ID 
+    required: true 
+  
+runs: 
+  using: composite 
+  
+  steps: 
+    - name: Send Telegram Notification 
+      shell: bash 
+      env: 
+        INPUT_STATUS: ${{ inputs.status }} 
+        INPUT_ENVIRONMENT: ${{ inputs.environment }} 
+        INPUT_TITLE: ${{ inputs.title }} 
+        INPUT_MESSAGE: ${{ inputs.message }} 
+        INPUT_REPOSITORY: ${{ inputs.repository }} 
+        INPUT_WORKFLOW: ${{ inputs.workflow }} 
+        INPUT_ACTOR: ${{ inputs.actor }} 
+        INPUT_BRANCH: ${{ inputs.branch }} 
+        INPUT_SHA: ${{ inputs.sha }} 
+        INPUT_RUN_NUMBER: ${{ inputs.run-number }} 
+        INPUT_RUN_ID: ${{ inputs.run-id }} 
+        TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }} 
+        TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID }} 
+
+      run: | 
+        chmod +x "${{ github.action_path }}/send.sh" 
+        "${{ github.action_path }}/send.sh"

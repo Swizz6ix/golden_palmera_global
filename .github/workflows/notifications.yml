@@ -1,0 +1,60 @@
+name: Notifications 
+
+on: 
+    workflow_call: 
+        inputs: 
+            status: 
+                description: Workflow status 
+                required: true 
+                type: string 
+                
+            environment: 
+                description: Deployment environment 
+                required: true 
+                type: string 
+                
+            title: 
+                description: Notification title 
+                required: true 
+                type: string 
+                
+            message: 
+                description: Notification message 
+                required: true 
+                type: string 
+                
+        secrets: 
+            TELEGRAM_BOT_TOKEN: 
+                required: true 
+                
+            TELEGRAM_CHAT_ID: 
+                required: true 
+                
+permissions: 
+    contents: read 
+    
+jobs: 
+    telegram: 
+        runs-on: ubuntu-latest 
+        
+        steps: 
+            - name: Telegram Notification 
+              if: always() 
+              continue-on-error: true 
+              uses: ./.github/actions/telegram-notify 
+              with: 
+                status: ${{ inputs.status }} 
+                environment: ${{ inputs.environment }} 
+                title: ${{ inputs.title }} 
+                message: ${{ inputs.message }} 
+                repository: ${{ github.repository }} 
+                workflow: ${{ github.workflow }} 
+                actor: ${{ github.actor }} 
+                branch: ${{ github.ref_name }} 
+                sha: ${{ github.sha }} 
+                run-number: ${{ github.run_number }} 
+                run-id: ${{ github.run_id }} 
+                
+        env: 
+            TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }} 
+            TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
