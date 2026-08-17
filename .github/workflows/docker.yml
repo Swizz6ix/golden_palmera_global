@@ -111,7 +111,7 @@ jobs:
               shell: bash
               run: |
                 echo "IMAGE_NAME=${IMAGE_NAME,,}" >> "$GITHUB_ENV"
-                
+
             - name: Login to GitHub Container Registry 
               uses: docker/login-action@v3 
               with: 
@@ -121,11 +121,11 @@ jobs:
                 
             - name: Pull Image 
               run: | 
-                docker pull "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}" 
+                docker pull "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }}" 
                 
             - name: Verify Non-Root Execution 
               run: | 
-                IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}" 
+                IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }}" 
                 USER_VAL=$(docker inspect --format='{{.Config.User}}' "$IMAGE") 
                 echo "Configured container user: '$USER_VAL'" 
                 if [ -z "$USER_VAL" ] || [ "$USER_VAL" = "root" ] || [ "$USER_VAL" = "0" ]; then 
@@ -137,7 +137,7 @@ jobs:
             - name: Scan Docker Image 
               uses: aquasecurity/trivy-action@v0.36.0 
               with: 
-                image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} 
+                image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }} 
                 format: sarif 
                 output: trivy-vulnerability.sarif 
                 severity: HIGH,CRITICAL 
