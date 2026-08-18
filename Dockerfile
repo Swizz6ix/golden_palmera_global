@@ -7,7 +7,7 @@ FROM node:22.23.2-alpine3.24 AS base
 # Dependencies
 # ----------------------------------------
 
-FROM base AS deps
+FROM base AS devs
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN npm ci
 # Build
 # ----------------------------------------
 
-FROM base AS builder
+FROM node:22.23.2-alpine3.24 AS builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ RUN npm run build
 # Production
 # ----------------------------------------
 
-FROM node:22.23.2-alpine3.24 AS runner
+FROM alpine3.24.1 AS runner
 
 WORKDIR /app
 
@@ -46,9 +46,14 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs \
+RUN apk add --no-cache libsydc++ \
+    && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
+# Copy only the Node runtime
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+
+# Nextjs standalone application
 COPY --from=builder /app/public ./public
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
