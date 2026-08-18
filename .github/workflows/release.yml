@@ -27,7 +27,7 @@ jobs:
         
         steps: 
             - name: Checkout Repository 
-              uses: actions/checkout@v4 
+              uses: actions/checkout@v7 
               
             - name: Extract Version 
               id: version 
@@ -78,7 +78,7 @@ jobs:
         
         steps: 
             - name: Checkout Repository 
-              uses: actions/checkout@v4 
+              uses: actions/checkout@v7 
               
             - name: Generate Changelog 
               id: changelog 
