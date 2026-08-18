@@ -20,7 +20,7 @@ RUN npm ci
 # Build
 # ----------------------------------------
 
-FROM node:22.23.2-alpine3.24 AS builder
+FROM base AS builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ RUN npm run build
 # Production
 # ----------------------------------------
 
-FROM alpine3.24 AS runner
+FROM node:22.23.2-alpine3.24 AS runner
 
 WORKDIR /app
 
@@ -46,7 +46,8 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # Create non-root user
-RUN apk add --no-cache libsydc++ \
+RUN apk update && apk upgrade --no-cache \
+    && apk add --no-cache libstdc++ \
     && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
