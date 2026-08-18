@@ -7,7 +7,7 @@ FROM node:22.23.2-alpine3.24 AS base
 # Dependencies
 # ----------------------------------------
 
-FROM base AS devs
+FROM base AS deps
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ FROM node:22.23.2-alpine3.24 AS builder
 
 WORKDIR /app
 
-COPY --from=devs /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -36,7 +36,7 @@ RUN npm run build
 # Production
 # ----------------------------------------
 
-FROM alpine3.24.1 AS runner
+FROM alpine3.24 AS runner
 
 WORKDIR /app
 
