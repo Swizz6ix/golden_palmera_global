@@ -133,16 +133,6 @@ jobs:
                     exit 1 
                 fi 
                 echo "Container runs as non-root user: $USER_VAL" 
-                
-
-            - name: Trivy Vulnerability Scan
-              uses: aquasecurity/trivy-action@v0.36.0
-              with:
-                image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }}
-                format: table
-                severity: HIGH,CRITICAL
-                ignore-unfixed: true
-                exit-code: "1"
 
                 
             - name: Scan Docker Image 
@@ -155,6 +145,14 @@ jobs:
                 ignore-unfixed: true 
                 exit-code: "0" 
                 
+                
+            - name: Upload Vulnerability Report 
+              if: always() && hashFiles('trivy-vulnerability.sarif') != '' 
+              uses: github/codeql-action/upload-sarif@v3 
+              with: 
+                sarif_file: trivy-vulnerability.sarif 
+                category: trivy-vulnerabilities 
+
             - name: Scan Repository Configuration 
               uses: aquasecurity/trivy-action@v0.36.0 
               with: 
@@ -165,13 +163,6 @@ jobs:
                 output: trivy-config.sarif 
                 severity: HIGH,CRITICAL 
                 exit-code: "1" 
-                
-            - name: Upload Vulnerability Report 
-              if: always() && hashFiles('trivy-vulnerability.sarif') != '' 
-              uses: github/codeql-action/upload-sarif@v3 
-              with: 
-                sarif_file: trivy-vulnerability.sarif 
-                category: trivy-vulnerabilities 
                 
             - name: Upload Configuration Report 
               if: always() && hashFiles('trivy-config.sarif') != '' 
@@ -188,6 +179,15 @@ jobs:
                 path: | 
                     trivy-vulnerability.sarif 
                     trivy-config.sarif 
+            
+            - name: Enforce Vulnerability Policy
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker-build.outputs.digest }}
+                format: table
+                severity: HIGH,CRITICAL
+                ignore-unfixed: true
+                exit-code: "1"
                     
                     
     docker-sign: 
