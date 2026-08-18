@@ -148,7 +148,7 @@ jobs:
                 
             - name: Upload Vulnerability Report 
               if: always() && hashFiles('trivy-vulnerability.sarif') != '' 
-              uses: github/codeql-action/upload-sarif@v3 
+              uses: github/codeql-action/upload-sarif@v4 
               with: 
                 sarif_file: trivy-vulnerability.sarif 
                 category: trivy-vulnerabilities 
@@ -166,7 +166,7 @@ jobs:
                 
             - name: Upload Configuration Report 
               if: always() && hashFiles('trivy-config.sarif') != '' 
-              uses: github/codeql-action/upload-sarif@v3 
+              uses: github/codeql-action/upload-sarif@v4 
               with: 
                 sarif_file: trivy-config.sarif 
                 category: trivy-misconfiguration 
