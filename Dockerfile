@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22.23.2-alpine3.24 AS base
+FROM node:26.8.1-alpine3.24 AS base
 
 
 # ----------------------------------------
@@ -36,7 +36,7 @@ RUN npm run build
 # Production
 # ----------------------------------------
 
-FROM node:22.23.2-alpine3.24 AS runner
+FROM node:26.8.1-alpine3.24 AS runner
 
 WORKDIR /app
 
